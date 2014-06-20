@@ -1,0 +1,77 @@
+---
+title: "Practical Machine Learning Course Project"
+output: html_document
+---
+## Project Summary
+Human Activity Recognition (HAR) is a hot area of research focusing on using data to recognize and predict activities. With the development of fitness bands massive amounts of data have become avaiable. The focus of this project is to use data from the weight lifting data sets to determine how "well" the activity was preformed.
+
+The data is available from: http://groupware.les.inf.puc-rio.br
+
+The training set is available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The testing set is available here: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+## Analysis
+
+R packages used and loaded
+```{r, echo=FALSE}
+library(caret)
+library(lattice)
+library(ggplot2)
+library(stats)
+library(randomForest)
+```
+
+Read in the data sets:
+```{r}
+PMLtraining<-read.csv("pml-training.csv")
+PMLtesting<-read.csv("pml-testing.csv")
+dim(PMLtraining)
+dim(PMLtesting)
+```
+
+Partition PML Training into training and cross-validation set and imput missing values
+```{r, echo=FALSE}
+set.seed(4321)
+trainIn <- createDataPartition(PMLtraining$classe, list=FALSE, p=.7)
+training = PMLtraining[trainIn,]
+testing = PMLtraining[-trainIn,]
+numID = which(lapply(training,class) %in% c('numeric'))
+preProc <- preProcess(training[,numID], method=c('knnImpute'))
+training <- cbind(training$classe, predict(preProc, training[,numID]))
+testing <- cbind(testing$classe, predict(preProc, testing[,numID]))
+names(testing)[1] <- "classe"
+names(training)[1] <- "classe"
+predtest <- predict(preProc, PMLtesting[,numID])
+```
+Generate Model
+```{r}
+modelRF  <- randomForest(training$classe ~ ., training)
+```
+## Calculate In-Sample Accuracy
+```{r}
+trainPred <- predict(modelRF, training)
+confusionMatrix(trainPred, training$classe)
+```
+
+## Calculate Testing Accuracy
+```{r}
+testPred <- predict(modelRF, testing)
+confusionMatrix(testPred, testing$classe)
+```
+
+## Apply the Random Forest Model to PML Testing
+```{r}
+answers <- predict(modelRF, predtest)
+answers
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)
+
+```
+
