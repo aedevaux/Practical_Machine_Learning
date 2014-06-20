@@ -3,6 +3,7 @@ title: "Practical Machine Learning Course Project"
 output: html_document
 ---
 ## Project Summary
+
 Human Activity Recognition (HAR) is a hot area of research focusing on using data to recognize and predict activities. With the development of fitness bands massive amounts of data have become avaiable. The focus of this project is to use data from the weight lifting data sets to determine how "well" the activity was preformed.
 
 The data is available from: http://groupware.les.inf.puc-rio.br
